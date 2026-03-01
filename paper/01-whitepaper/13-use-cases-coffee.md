@@ -2,7 +2,7 @@
 Nusantara Trace - Coffee Use Cases
 Version: 0.1
 Status: Draft
-EventDB Core Reference: d611fe102fdf6cf308c9633ca9b719f3c152d3ba
+
 
 ## Use Case 1: Origin to Cooperative Intake
 

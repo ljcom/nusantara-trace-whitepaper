@@ -2,7 +2,7 @@
 Nusantara Trace - Dependency on EventDB Core
 Version: 0.1
 Status: Draft
-EventDB Core Reference: d611fe102fdf6cf308c9633ca9b719f3c152d3ba
+
 
 Nusantara Trace is a dependent domain profile of EventDB Core. Conformance of this profile presupposes conformance to the referenced EventDB Core specification.
 
@@ -51,3 +51,5 @@ Responsibility boundaries are explicit:
 - Nusantara Trace handles domain logic: custody semantics, transfer handshake interpretation, quantity validation rules, exception semantics, and audit evidence mapping.
 
 A feature request that requires changes to core integrity semantics is out of scope for profile-layer modification and MUST be addressed through EventDB Core governance.
+
+Nusantara Trace does not redefine namespace semantics. Namespace governance and ledger boundary governance remain defined exclusively by EventDB Core. Accordingly, Nusantara Trace is namespace-agnostic and boundary-compatible.

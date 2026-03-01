@@ -1,0 +1,11 @@
+flowchart TB
+    E[EventDB Core Integrity Model]
+    A[Independent Ledger Boundary A]
+    B[Independent Ledger Boundary B]
+    D[Nusantara Trace Domain Semantics]
+
+    E --> A
+    E --> B
+    A <-->|Reference-based Verification| B
+    A --> D
+    B --> D

@@ -2,7 +2,7 @@
 Nusantara Trace - Federated Two-Ledger Transfer Protocol
 Version: 0.1
 Status: Draft
-EventDB Core Reference: d611fe102fdf6cf308c9633ca9b719f3c152d3ba
+
 
 ## 1. Purpose and Scope
 
@@ -121,6 +121,16 @@ When `TRANSFER_IN_REJECT` is recorded:
 - Transfer status for that `xfer_id` is `SETTLED_REJECTED`, not pending.
 - Any subsequent transfer attempt MUST create a new `TRANSFER_OUT` with a new `xfer_id`.
 - Post-rejection corrections MUST be represented by new events.
+
+## 9.x Non-Atomicity Clarification
+
+The federated transfer handshake is bilateral evidentiary coordination. It is not a distributed atomic commit protocol.
+
+- The handshake MUST be interpreted as coordinated evidence between two independent ledgers.
+- The handshake MUST NOT be interpreted as atomic cross-ledger state synchronization.
+- Each institution MUST commit its transfer events independently within its own ledger boundary.
+- Reconciliation MUST be achieved through deterministic cross-boundary reference verification and profile validation rules, not through transactional coupling.
+- Nusantara Trace MUST NOT introduce distributed transaction semantics across institution boundaries.
 
 ## 10. Integrity Boundary Reminder
 

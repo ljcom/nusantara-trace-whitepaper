@@ -2,7 +2,7 @@
 Nusantara Trace - Scope and Non-Goals
 Version: 0.1
 Status: Draft
-EventDB Core Reference: d611fe102fdf6cf308c9633ca9b719f3c152d3ba
+
 
 This section defines the functional boundary of Nusantara Trace as a domain profile built on EventDB Core.
 

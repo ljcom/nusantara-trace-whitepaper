@@ -2,7 +2,7 @@
 Nusantara Trace - Related Work
 Version: 0.1
 Status: Draft
-EventDB Core Reference: d611fe102fdf6cf308c9633ca9b719f3c152d3ba
+
 
 This section positions Nusantara Trace relative to existing approaches.
 
@@ -22,4 +22,13 @@ Nusantara Trace adopts this last approach through EventDB Core inheritance and c
 
 ## Distinction of Contribution
 
-Nusantara Trace does not introduce a new integrity algorithm. Its contribution is profile-level: standardized domain events, transfer handshake rules, reconciliation constraints, and audit evidence semantics for regulator-facing supply chain use.
+Nusantara Trace contributes:
+- Domain-standardized custody event taxonomy.
+- Deterministic bilateral transfer handshake semantics.
+- Explicit reconciliation and discrepancy modeling.
+- Audit-oriented evidence packaging rules.
+
+Nusantara Trace does NOT contribute:
+- A new integrity algorithm.
+- A global consensus mechanism.
+- A cross-ledger atomic settlement model.

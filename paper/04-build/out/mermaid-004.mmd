@@ -1,0 +1,12 @@
+flowchart LR
+    S1[Sender: Lot in custody]
+    S2[Sender: TRANSFER OUT<br/>xfer_id, quantity]
+    R1[Receiver: Expected intake]
+    R2[Receiver: TRANSFER IN ACCEPT/REJECT<br/>same xfer_id]
+    ST[Settled / Disputed status]
+
+    S1 --> S2
+    R1 --> R2
+    S2 -->|reference-based reconciliation| R2
+    S2 --> ST
+    R2 --> ST

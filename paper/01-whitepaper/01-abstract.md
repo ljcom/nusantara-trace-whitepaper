@@ -2,7 +2,7 @@
 Nusantara Trace - Abstract
 Version: 0.1
 Status: Draft
-EventDB Core Reference: d611fe102fdf6cf308c9633ca9b719f3c152d3ba
+
 
 Supply chain traceability remains difficult in multi-actor agricultural systems where records pass through cooperatives, processors, exporters, certifiers, and regulators. In practice, origin claims, custody handovers, and quantity transitions are often recorded in separate databases with limited cross-organization verification. This creates recurring risks: unverified origin attribution, unresolved transfer discrepancies, and audit processes that depend on post-hoc document assembly.
 

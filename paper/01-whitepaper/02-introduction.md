@@ -2,7 +2,7 @@
 Nusantara Trace - Introduction
 Version: 0.1
 Status: Draft
-EventDB Core Reference: d611fe102fdf6cf308c9633ca9b719f3c152d3ba
+
 
 Supply chain actors require records that can be audited across organizational boundaries. Existing ERP workflows are effective for operations, but mutable records and fragmented handover evidence create assurance gaps during inspection, dispute, and certification.
 
@@ -30,3 +30,12 @@ The profile layer defines domain rules for:
 - QR pointer usage for public lookup and inspection workflows
 
 Nusantara Trace is institution-centric and federation-compatible. Each institution controls its own account governance and operational policy. Cross-institution verification is performed through deterministic exchange of event references and signatures, not through ideological decentralization claims.
+
+## 3.x Ledger Boundary Alignment
+
+Nusantara Trace operates strictly within the Ledger Boundary model defined by EventDB Core.
+
+- Each institution MUST maintain sovereign control over its own ledger boundary, including event issuance authority, signing authority governance, and operational policy.
+- A ledger boundary MUST be treated as an integrity isolation unit for verification and accountability, and MUST NOT be treated as a domain classification mechanism.
+- Cross-institution interaction MUST occur through verifiable cross-boundary event references; participating institutions MUST NOT assume shared mutable state across boundaries.
+- Transfer and reconciliation outcomes MUST be derived from independently recorded statements that are correlated by profile rules, consistent with federated boundary operation.

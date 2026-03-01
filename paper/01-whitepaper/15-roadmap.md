@@ -2,7 +2,7 @@
 Nusantara Trace - Roadmap and Future Extensions
 Version: 0.1
 Status: Draft
-EventDB Core Reference: d611fe102fdf6cf308c9633ca9b719f3c152d3ba
+
 
 ## 1. Roadmap Baseline
 

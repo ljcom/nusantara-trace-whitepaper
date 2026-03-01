@@ -7,6 +7,7 @@ OUT_DIR="$ROOT_DIR/04-build/out"
 OUT_FILE="$OUT_DIR/nusantara-trace-whitepaper.pdf"
 TMP_MD="$OUT_DIR/.whitepaper_combined.md"
 TITLE="Nusantara Trace: Institution-Aware Traceability Profile over EventDB Core"
+MERMAID_FILTER="$ROOT_DIR/04-build/mermaid.lua"
 
 if [[ ! -d "$WHITEPAPER_DIR" ]]; then
   echo "Error: whitepaper directory not found: $WHITEPAPER_DIR" >&2
@@ -71,6 +72,13 @@ done
   done
 } > "$TMP_MD"
 
+if rg -n '^```mermaid' "$TMP_MD" >/dev/null 2>&1; then
+  if ! command -v mmdc >/dev/null 2>&1; then
+    echo "ERROR: Mermaid blocks found but 'mmdc' is not installed." >&2
+    exit 1
+  fi
+fi
+
 BIB_FILE="$WHITEPAPER_DIR/references.bib"
 PANDOC_ARGS=(
   "$TMP_MD"
@@ -81,6 +89,7 @@ PANDOC_ARGS=(
   --toc-depth=2
   --number-sections
   --pdf-engine="$PDF_ENGINE"
+  --lua-filter "$MERMAID_FILTER"
   -V geometry:margin=1in
   -V colorlinks=true
   -V linkcolor=blue
