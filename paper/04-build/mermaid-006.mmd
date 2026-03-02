@@ -1,0 +1,8 @@
+flowchart TB
+    AS[Select scope: lot / period / institutions]
+    CL[Collect related lifecycle events]
+    VI[Verify integrity outcomes<br/>inherited core checks]
+    DC[Evaluate domain consistency<br/>- origin-to-custody continuity<br/>- transfer handshake completeness<br/>- quantity transition consistency<br/>- lineage consistency]
+    AP[Audit conclusion package]
+
+    AS --> CL --> VI --> DC --> AP

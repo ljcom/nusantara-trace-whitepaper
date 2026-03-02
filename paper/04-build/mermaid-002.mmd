@@ -1,0 +1,16 @@
+flowchart TB
+    OC[ORIGIN CREATED]
+    IC[IN CUSTODY: Producer/Cooperative]
+    TO[TRANSFER OUT]
+    TA[TRANSFER ACCEPTED BY RECEIVER]
+    DC[DIRECT CONTINUATION]
+    RSM[REPACK / SPLIT / MERGE]
+    AC[AUDIT CHECKPOINT]
+    CC[CERTIFICATION / CLOSE]
+
+    OC --> IC --> TO --> TA
+    TA --> DC
+    TA --> RSM
+    DC --> AC
+    RSM --> AC
+    AC --> CC

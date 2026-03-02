@@ -1,0 +1,15 @@
+flowchart TB
+    subgraph Split
+      SP[Parent Lot P] --> SC1[Child Lot C1]
+      SP --> SC2[Child Lot C2]
+      SP --> SCN[Child Lot Cn]
+    end
+
+    subgraph Merge
+      MA[Parent Lot A] --> MM[Merged Lot M]
+      MB[Parent Lot B] --> MM
+    end
+
+    subgraph Repack
+      RP[Lot R - pre-repack] --> RR[Lot R' - repack state]
+    end
