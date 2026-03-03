@@ -241,24 +241,6 @@ body {
   margin: 0.2rem 0;
 }
 
-.stat-label,
-.stat-value {
-  display: none;
-}
-
-.stat-label {
-  margin: 0;
-  color: #475467;
-  font-size: 0.86rem;
-}
-
-.stat-value {
-  margin: 0.4rem 0 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #101828;
-}
-
 .button-link {
   display: inline-block;
   margin-top: 1.5rem;

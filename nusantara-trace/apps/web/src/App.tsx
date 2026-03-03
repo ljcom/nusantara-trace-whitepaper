@@ -11,13 +11,13 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<MainLayout />}>
-          <Route index element={<Navigate replace to="/signin" />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/create-tenant" element={<CreateTenantPage />} />
-          <Route path="/signin" element={<SignInPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Navigate replace to="signin" />} />
+          <Route path="home" element={<HomePage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="create-tenant" element={<CreateTenantPage />} />
+          <Route path="signin" element={<SignInPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

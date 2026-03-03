@@ -8,8 +8,8 @@ export function NotFoundPage() {
       <p className="description">
         URL yang kamu buka belum tersedia pada tahap mockup ini.
       </p>
-      <Link to="/home" className="button-link">
-        Kembali ke Home
+      <Link to="/signin" className="button-link">
+        Kembali ke Sign In
       </Link>
     </section>
   )
