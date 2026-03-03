@@ -1,0 +1,291 @@
+:root {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #101828;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef4f6 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.container {
+  width: min(1120px, 100% - 2rem);
+  margin: 0 auto;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(8px);
+  background: rgba(248, 250, 252, 0.9);
+  border-bottom: 1px solid #d0d5dd;
+}
+
+.app-header__inner {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-nav__link {
+  color: #344054;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+}
+
+.app-nav__link:hover {
+  background: #e4edf1;
+}
+
+.app-nav__link--active {
+  color: #0b3b52;
+  background: #d0e5ee;
+}
+
+.app-main {
+  display: grid;
+  align-items: center;
+  padding: 2rem 0;
+}
+
+.page {
+  max-width: 760px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #475467;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.title {
+  margin: 0.5rem 0 1rem;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.2;
+}
+
+.description {
+  margin: 0;
+  color: #344054;
+  max-width: 60ch;
+}
+
+.form-card {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.9rem;
+  background: #fff;
+  display: grid;
+  gap: 1rem;
+  width: min(520px, 100%);
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: #344054;
+}
+
+.field span {
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+}
+
+.field input:focus {
+  outline: 2px solid #98b6c5;
+  outline-offset: 1px;
+}
+
+.primary-button,
+.text-link {
+  border: 0;
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.95rem;
+  font: inherit;
+  font-weight: 700;
+}
+
+.primary-button {
+  background: #0b3b52;
+  color: #fff;
+  cursor: pointer;
+}
+
+.text-link {
+  display: inline-block;
+  background: #d0e5ee;
+  color: #0b3b52;
+  text-decoration: none;
+  text-align: center;
+}
+
+.inline-note {
+  margin-top: 1rem;
+  color: #475467;
+}
+
+.inline-note a {
+  color: #0b3b52;
+  font-weight: 700;
+}
+
+.workflow-grid {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.workflow-card {
+  padding: 1rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.9rem;
+  background: #fff;
+}
+
+.workflow-id {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #475467;
+  font-weight: 700;
+}
+
+.workflow-title {
+  margin: 0.45rem 0 0.4rem;
+  font-size: 1.15rem;
+}
+
+.workflow-note {
+  margin: 0;
+  color: #344054;
+}
+
+.workflow-chip {
+  margin: 0.7rem 0 0;
+  padding: 0.25rem 0.55rem;
+  width: fit-content;
+  border-radius: 999px;
+  background: #e7f8ef;
+  color: #067647;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.workflow-section-title {
+  margin: 0.9rem 0 0.35rem;
+  font-size: 0.82rem;
+  color: #475467;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.workflow-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #101828;
+}
+
+.workflow-list li {
+  margin: 0.2rem 0;
+}
+
+.stat-label,
+.stat-value {
+  display: none;
+}
+
+.stat-label {
+  margin: 0;
+  color: #475467;
+  font-size: 0.86rem;
+}
+
+.stat-value {
+  margin: 0.4rem 0 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #101828;
+}
+
+.button-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.65rem;
+  text-decoration: none;
+  background: #0b3b52;
+  color: #fff;
+  font-weight: 700;
+}
+
+.app-footer {
+  padding: 1rem 0 1.5rem;
+  border-top: 1px solid #d0d5dd;
+  color: #475467;
+}
+
+@media (max-width: 640px) {
+  .app-header__inner {
+    min-height: 56px;
+  }
+
+  .brand {
+    font-size: 1rem;
+  }
+
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+}
