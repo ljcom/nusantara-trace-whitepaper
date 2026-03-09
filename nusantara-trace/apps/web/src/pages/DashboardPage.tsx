@@ -80,6 +80,8 @@ type StockBatch = {
   published: boolean
 }
 
+type ProfileStatus = 'DRAFT' | 'PENDING_VERIFICATION' | 'VERIFIED_LIMITED' | 'VERIFIED_FULL'
+
 const flowCards: FlowCard[] = [
   {
     id: '1',
@@ -151,6 +153,13 @@ const incomingOrderStatuses: IncomingOrderStatus[] = [
   'CANCELLED',
 ]
 const samplingStatuses: SamplingStatus[] = ['REQUESTED', 'SCHEDULED', 'IN_TEST', 'COMPLETED', 'REJECTED']
+
+const roleVerificationRequirements: Record<DashboardRole, string[]> = {
+  farmer: ['Farm/Cooperative Proof Document', 'Geolocation Declaration'],
+  distributor: ['Warehouse Address Proof', 'Distribution License'],
+  tester: ['Lab Accreditation Certificate', 'Testing Scope Document'],
+  customer: ['Company Registration Document', 'Procurement PIC Authorization'],
+}
 
 const initialTransactionsByStep = flowCards.reduce((accumulator, card) => {
   accumulator[card.id] = [
@@ -303,6 +312,12 @@ export function DashboardPage({
       published: true,
     },
   ])
+  const [profileStatus, setProfileStatus] = useState<ProfileStatus>('DRAFT')
+  const [profileWizardStep, setProfileWizardStep] = useState<1 | 2 | 3 | 4>(1)
+  const [idCardUploaded, setIdCardUploaded] = useState(false)
+  const [faceVerified, setFaceVerified] = useState(false)
+  const [roleDocChecks, setRoleDocChecks] = useState<Record<string, boolean>>({})
+  const [reviewAccepted, setReviewAccepted] = useState(false)
 
   const filteredFlowCards = flowCards.filter((card) => visibleStepIds.includes(card.id))
   const activeCard = filteredFlowCards.find((card) => card.id === activeActionId)
@@ -315,6 +330,10 @@ export function DashboardPage({
   ).length
   const canAccessStock = role === 'farmer' || role === 'distributor'
   const roleStockBatches = stockBatches.filter((batch) => batch.ownerRole === role)
+  const profileRequirements = roleVerificationRequirements[role]
+  const allRoleDocsChecked =
+    profileRequirements.length > 0 &&
+    profileRequirements.every((requirement) => Boolean(roleDocChecks[`${role}-${requirement}`]))
 
   const handleActionClick = (actionId: string) => {
     if (actionId === '7') {
@@ -343,6 +362,22 @@ export function DashboardPage({
     setTransactionPanelMode('list')
     setTransactionError('')
     document.getElementById('dashboard-stock-main')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleProfileClick = () => {
+    setActiveActionId('profile')
+    setTransactionPanelMode('list')
+    setTransactionError('')
+    document.getElementById('dashboard-profile-main')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleSubmitProfileVerification = () => {
+    if (!idCardUploaded || !faceVerified || !allRoleDocsChecked || !reviewAccepted) {
+      return
+    }
+
+    setProfileStatus('PENDING_VERIFICATION')
+    setProfileWizardStep(4)
   }
 
   const handleTransactionFieldChange = (field: keyof Omit<StepTransaction, 'id'>, value: string) => {
@@ -470,6 +505,10 @@ export function DashboardPage({
       return
     }
 
+    if (activeActionId === 'profile') {
+      return
+    }
+
     if (activeActionId !== 'overview' && !visibleStepIds.includes(activeActionId)) {
       setActiveActionId('overview')
     }
@@ -518,6 +557,13 @@ export function DashboardPage({
                 Stock
               </button>
             ) : null}
+            <button
+              className={`dashboard-action ${activeActionId === 'profile' ? 'dashboard-action--active' : ''}`}
+              onClick={handleProfileClick}
+              type="button"
+            >
+              Profile
+            </button>
           </div>
         </aside>
 
@@ -978,6 +1024,158 @@ export function DashboardPage({
                       </button>
                     </article>
                   ))}
+                </div>
+              </article>
+            </section>
+          ) : null}
+
+          {activeActionId === 'profile' ? (
+            <section className="transaction-panel" id="dashboard-profile-main">
+              <article className="workflow-card">
+                <h2 className="workflow-title">Profile</h2>
+                <p className="workflow-note">
+                  Informasi akun, status verifikasi formal, dan wizard proses verifikasi.
+                </p>
+                <div className="transaction-list">
+                  <div className="transaction-list-item">
+                    <p className="transaction-list-item__meta">
+                      Role: <strong>{title}</strong>
+                    </p>
+                    <p className="transaction-list-item__meta">
+                      Organization: <strong>PT Nusantara Trace Demo</strong>
+                    </p>
+                    <p className="transaction-list-item__meta">
+                      PIC Email: <strong>admin@tenant.com</strong>
+                    </p>
+                    <p className="transaction-list-item__meta">
+                      Verification Status:{' '}
+                      <span className={getStatusClassName(profileStatus)}>{profileStatus}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="workflow-help">
+                  <h3 className="workflow-title">Formal Verification Process</h3>
+                  <p className="wizard-step">Step {profileWizardStep} of 4</p>
+
+                  {profileWizardStep === 1 ? (
+                    <div className="verification-list">
+                      <p className="workflow-note">1. Identity Proof Submission</p>
+                      <label className="wizard-check">
+                        <input
+                          checked={idCardUploaded}
+                          onChange={(event) => setIdCardUploaded(event.target.checked)}
+                          type="checkbox"
+                        />
+                        <span>ID Card Uploaded (KTP/Passport)</span>
+                      </label>
+                      <label className="wizard-check">
+                        <input
+                          checked={faceVerified}
+                          onChange={(event) => setFaceVerified(event.target.checked)}
+                          type="checkbox"
+                        />
+                        <span>Face Identification & Liveness Check Completed</span>
+                      </label>
+                      <div className="wizard-actions">
+                        <button
+                          className="primary-button"
+                          disabled={!idCardUploaded || !faceVerified}
+                          onClick={() => setProfileWizardStep(2)}
+                          type="button"
+                        >
+                          Continue to Role Documents
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {profileWizardStep === 2 ? (
+                    <div className="verification-list">
+                      <p className="workflow-note">2. Role-Based Document Verification</p>
+                      {profileRequirements.map((requirement) => {
+                        const key = `${role}-${requirement}`
+                        return (
+                          <label className="wizard-check" key={requirement}>
+                            <input
+                              checked={Boolean(roleDocChecks[key])}
+                              onChange={(event) =>
+                                setRoleDocChecks((prev) => ({ ...prev, [key]: event.target.checked }))
+                              }
+                              type="checkbox"
+                            />
+                            <span>{requirement}</span>
+                          </label>
+                        )
+                      })}
+                      <div className="wizard-actions">
+                        <button className="text-link" onClick={() => setProfileWizardStep(1)} type="button">
+                          Back
+                        </button>
+                        <button
+                          className="primary-button"
+                          disabled={!allRoleDocsChecked}
+                          onClick={() => setProfileWizardStep(3)}
+                          type="button"
+                        >
+                          Continue to Review
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {profileWizardStep === 3 ? (
+                    <div className="verification-list">
+                      <p className="workflow-note">3. Compliance Review & Declaration</p>
+                      <label className="wizard-check">
+                        <input
+                          checked={reviewAccepted}
+                          onChange={(event) => setReviewAccepted(event.target.checked)}
+                          type="checkbox"
+                        />
+                        <span>I confirm all submitted documents are authentic and valid.</span>
+                      </label>
+                      <div className="wizard-actions">
+                        <button className="text-link" onClick={() => setProfileWizardStep(2)} type="button">
+                          Back
+                        </button>
+                        <button
+                          className="primary-button"
+                          disabled={!reviewAccepted}
+                          onClick={handleSubmitProfileVerification}
+                          type="button"
+                        >
+                          Submit Verification
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {profileWizardStep === 4 ? (
+                    <div className="verification-list">
+                      <p className="workflow-note">4. Verification Decision</p>
+                      <p className="workflow-note">
+                        Current verification queue status:{' '}
+                        <span className={getStatusClassName(profileStatus)}>{profileStatus}</span>
+                      </p>
+                      <div className="wizard-actions">
+                        <button
+                          className="text-link"
+                          onClick={() => setProfileStatus('VERIFIED_LIMITED')}
+                          type="button"
+                        >
+                          Mark Verified Limited
+                        </button>
+                        <button
+                          className="primary-button"
+                          onClick={() => setProfileStatus('VERIFIED_FULL')}
+                          type="button"
+                        >
+                          Mark Verified Full
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </article>
             </section>
