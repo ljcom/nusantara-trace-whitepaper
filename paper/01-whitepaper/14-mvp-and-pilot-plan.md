@@ -8,6 +8,14 @@ Status: Draft
 
 This plan defines a practical pilot for coffee supply chain traceability using Nusantara Trace as a domain profile over EventDB Core.
 
+Initial strategic vertical: Specialty Coffee (B2B sourcing).
+
+Rationale:
+- origin signal has direct commercial value
+- buyer demand for transparency is already present
+- manageable operational volume for pilot learning loops
+- community-driven adoption path is realistic in early phase
+
 Pilot objective:
 - demonstrate reproducible custody traceability across institutions
 - validate transfer reconciliation behavior under real operating conditions

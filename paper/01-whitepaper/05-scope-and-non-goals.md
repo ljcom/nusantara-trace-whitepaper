@@ -10,10 +10,13 @@ This section defines the functional boundary of Nusantara Trace as a domain prof
 
 Nusantara Trace covers the following profile-level capabilities:
 
-- Custody tracking: recording and interpreting custody state transitions across institutions using domain events.
-- Transfer handshake: enforcing bilateral transfer semantics so sender and receiver records can be reconciled through a shared transfer identifier.
-- Quantity validation: applying deterministic profile rules to evaluate quantity consistency at transfer, split, merge, repack, and correction points.
-- Audit evidence: structuring trace records and references so auditors, certifiers, and regulators can reproduce verification outcomes from the same input dataset.
+- Origin creation at batch level.
+- Transfer request recording with pending state visibility.
+- Dual confirmation semantics across sender outflow and receiver inflow/rejection.
+- Split, sub-batch, merge, and repack lineage preservation.
+- Optional attestation references (lab, auditor, certifier statements).
+- Seal and optional anchoring checkpoints (core mechanics inherited from EventDB Core).
+- Public verification pointers for selected trace outputs (for example QR/public trace identifier).
 
 These capabilities are domain semantics. Core integrity mechanisms used to protect event continuity are inherited from EventDB Core and are not redefined in this profile.
 
@@ -21,11 +24,14 @@ These capabilities are domain semantics. Core integrity mechanisms used to prote
 
 Nusantara Trace does NOT cover the following functions:
 
-- Financial settlement between counterparties.
-- Token trading or token-market operations.
-- Legal enforcement or adjudication authority.
-- Marketplace functionality for product listing, bidding, or matching.
+- Accounting and general balance management.
+- Payment processing or financial settlement clearing.
+- Full marketplace matching and settlement execution.
+- Farm management software functions.
+- Internal ERP inventory replacement.
+- Commodity token exchange operation.
 - Cryptocurrency issuance.
+- Legal enforcement or adjudication authority.
 
 Any requirement in those areas MUST be handled by separate legal, financial, or commercial systems and governance processes.
 

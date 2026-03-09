@@ -8,6 +8,16 @@ Status: Draft
 
 This section defines governance boundaries for Nusantara Trace deployments. It clarifies which assurances are provided by system design and which responsibilities remain with participating institutions.
 
+## 1.1 Governance Positioning
+
+Nusantara governance posture is curated, not open-listing by default.
+
+Nusantara Premium Portal is positioned as:
+- curated listing portal
+- trust badge provider
+
+It is not a full marketplace matching/settlement system.
+
 ## 2. Institutional Responsibility
 
 Nusantara Trace operates in a federated institutional model. Each institution remains responsible for statements issued under its account scope.
@@ -92,6 +102,16 @@ Nusantara Trace is an integrity-oriented traceability profile for institutional 
 
 Physical verification, legal determination, and compliance determination remain institutional and regulatory functions.
 
+## 9.1 Strategic Boundary Reminder
+
+Nusantara Trace is not:
+- marketplace mass retail infrastructure
+- payment clearing house
+- commodity token exchange
+- farm ERP platform
+
+Nusantara Trace is an identity-backed custody integrity network for premium origin products.
+
 ## 10. Blockchain Anchoring Policy (Profile-Level Recommendation)
 
 Informative, policy-relevant.
@@ -161,3 +181,34 @@ Anchoring may support export compliance, cross-border inspection, and evidentiar
 Integrity = internal
 Anchoring = external evidentiary reinforcement
 ```
+
+## 11. Trace Score and Market Signaling (Profile Policy)
+
+Trace score is not a product quality score. Trace score expresses record integrity posture and custody continuity quality.
+
+A profile-level trace score SHOULD reflect:
+- custody completeness
+- transfer confirmation rate
+- freshness of custody updates
+- descriptor metadata completeness
+- presence of optional attestation
+- absence of broken chain conditions
+
+Trace score properties:
+- batch-centric
+- collective responsibility across participating supply-chain actors
+
+## 12. Economic Incentive Model (Adoption)
+
+Adoption is expected to be driven primarily by market access and reputational advantage, not by mandatory regulation alone.
+
+Expected incentive effects:
+- batches with complete and current trace records are more acceptable to premium buyers
+- faster verification improves buyer confidence for export workflows
+- richer attestation evidence strengthens credibility
+
+Expected disincentive effects:
+- stale or incomplete custody records reduce trace score
+- listing visibility or trust-badge eligibility MAY be restricted for unresolved chain gaps
+
+Transparency is treated as the incentive mechanism.

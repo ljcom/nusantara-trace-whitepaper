@@ -8,6 +8,17 @@ Supply chain actors require records that can be audited across organizational bo
 
 Nusantara Trace addresses this by defining a domain profile that runs on EventDB Core.
 
+## Positioning
+
+Nusantara Trace is not a general marketplace, not an ERP replacement, and not a commodity tokenization venue.
+
+Nusantara Trace is positioned as a curated trust and traceability infrastructure for premium commodities, centered on custody integrity and verified identity.
+
+Primary focus:
+- premium agricultural commodities (specialty coffee as initial vertical)
+- B2B sourcing workflows (cooperatives, exporters, importers, roasters)
+- integrity and transparency over retail transaction volume
+
 ## Layer Separation
 
 ### Inherited integrity layer (EventDB Core)
