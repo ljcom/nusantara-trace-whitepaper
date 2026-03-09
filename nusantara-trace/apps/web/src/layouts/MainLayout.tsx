@@ -1,9 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom'
 
 const links = [
-  { to: '/create-tenant', label: 'Create Tenant' },
-  { to: '/signin', label: 'Sign In' },
   { to: '/dashboard', label: 'Dashboard' },
+  { to: '/marketplace', label: 'Marketplace' },
+  { to: '/signin', label: 'Sign Out' },
 ]
 
 export function MainLayout() {

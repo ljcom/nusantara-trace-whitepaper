@@ -96,7 +96,7 @@ Batch operations may include:
 
 Parent-child lineage MUST be preserved so provenance reconstruction remains deterministic.
 
-### 2.5 Attestation (Optional)
+### 2.5 Attestation
 
 Optional third-party audit statements may include:
 - lab result

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 
 type FlowCard = {
   id: string
@@ -21,24 +21,32 @@ type StepTransaction = {
   eventDate: string
 }
 
-type TransferStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PARTIAL_APPROVED'
+type IncomingOrderStatus =
+  | 'NEW'
+  | 'CONFIRMED'
+  | 'READY_TO_SHIP'
+  | 'IN_TRANSIT'
+  | 'DELIVERED'
+  | 'CANCELLED'
 
-type TransferRequest = {
+type IncomingOrder = {
   id: string
+  salesOrderNo: string
   batchId: string
   buyerId: string
   sellerId: string
   quantity: string
   unit: string
-  requestDate: string
-  status: TransferStatus
+  orderDate: string
+  status: IncomingOrderStatus
 }
 
 type SamplingStatus = 'REQUESTED' | 'SCHEDULED' | 'IN_TEST' | 'COMPLETED' | 'REJECTED'
 
 type SamplingRequest = {
   id: string
-  originTransactionId: string
+  sourceTransactionId: string
+  sourceStepId: '1' | '4'
   batchId: string
   requesterActorId: string
   requestedDate: string
@@ -61,6 +69,17 @@ type VerificationResult = {
   note: string
 }
 
+type DashboardRole = 'farmer' | 'distributor' | 'tester' | 'customer'
+
+type StockBatch = {
+  id: string
+  batchId: string
+  source: 'CREATION' | 'PURCHASE'
+  qtyKg: number
+  ownerRole: 'farmer' | 'distributor'
+  published: boolean
+}
+
 const flowCards: FlowCard[] = [
   {
     id: '1',
@@ -80,19 +99,19 @@ const flowCards: FlowCard[] = [
   },
   {
     id: '2',
-    title: 'Transfer Request (Pending)',
-    note: 'Pengirim menginisiasi handover antar aktor.',
-    fields: ['From actor', 'To actor', 'Batch reference', 'Qty', 'Timestamp'],
-    status: 'PENDING',
-    outputs: ['Menunggu konfirmasi penerima'],
+    title: 'Transaction History & Progress',
+    note: 'Riwayat transaksi marketplace dan progres pemenuhan order.',
+    fields: ['Sales order no', 'Buyer', 'Seller', 'Batch reference', 'Qty', 'Order date', 'Current progress status'],
+    status: 'TRACKED',
+    outputs: ['Monitoring status order dari NEW sampai DELIVERED/CANCELLED'],
   },
   {
     id: '3',
-    title: 'Transfer Confirmation',
-    note: 'Penerima memutuskan approve/reject berdasarkan kecocokan data fisik.',
-    decisions: ['APPROVE (qty/reference sesuai)', 'REJECT (mismatch qty/reference)'],
-    events: ['Outflow (sender)', 'Inflow (receiver)'],
-    outputs: ['Anti-fraud: rekonsiliasi dua sisi wajib konsisten'],
+    title: 'Incoming Order & Shipment',
+    note: 'Seller meninjau incoming order dari marketplace lalu memproses pengiriman.',
+    decisions: ['CONFIRMED', 'READY_TO_SHIP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'],
+    events: ['Outgoing shipment', 'Delivery confirmation'],
+    outputs: ['Status order terbarui sampai barang diterima buyer'],
   },
   {
     id: '4',
@@ -102,7 +121,7 @@ const flowCards: FlowCard[] = [
   },
   {
     id: '5',
-    title: 'Attestation (Optional)',
+    title: 'Attestation',
     note: 'Audit pihak ketiga untuk klaim mutu/kepatuhan.',
     fields: ['Lab result', 'Quality grading', 'Organic certification reference'],
     outputs: ['Attestation event', 'Signed by auditor'],
@@ -123,27 +142,14 @@ const flowCards: FlowCard[] = [
   },
 ]
 
-const eventModel = [
-  'coffee.harvested',
-  'coffee.collected',
-  'coffee.processed',
-  'coffee.quality_checked',
-  'coffee.shipped',
-  'coffee.received',
-  'coffee.roasted',
-  'coffee.packaged',
+const incomingOrderStatuses: IncomingOrderStatus[] = [
+  'NEW',
+  'CONFIRMED',
+  'READY_TO_SHIP',
+  'IN_TRANSIT',
+  'DELIVERED',
+  'CANCELLED',
 ]
-
-const roleLayer = [
-  'Farmer: origin & harvest declaration',
-  'Collector: aggregation & transfer-out declaration',
-  'Processor: process + sub-batch lineage declaration',
-  'Exporter: export handover + compliance document reference',
-  'Roaster: roast + packaging declaration',
-  'Verifier/Auditor: quality/certification attestation',
-]
-
-const transferStatuses: TransferStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'PARTIAL_APPROVED']
 const samplingStatuses: SamplingStatus[] = ['REQUESTED', 'SCHEDULED', 'IN_TEST', 'COMPLETED', 'REJECTED']
 
 const initialTransactionsByStep = flowCards.reduce((accumulator, card) => {
@@ -162,8 +168,18 @@ const initialTransactionsByStep = flowCards.reduce((accumulator, card) => {
   return accumulator
 }, {} as Record<string, StepTransaction[]>)
 
-export function DashboardPage() {
-  const [activeActionId, setActiveActionId] = useState(flowCards[0].id)
+type DashboardPageProps = {
+  title?: string
+  visibleStepIds?: string[]
+  role?: DashboardRole
+}
+
+export function DashboardPage({
+  title = 'Dashboard - Coffee Use Case v0.2',
+  visibleStepIds = flowCards.map((card) => card.id),
+  role = 'farmer',
+}: DashboardPageProps) {
+  const [activeActionId, setActiveActionId] = useState('overview')
   const [transactionPanelMode, setTransactionPanelMode] = useState<'list' | 'add'>('list')
   const [stepTransactions, setStepTransactions] = useState<Record<string, StepTransaction[]>>(
     initialTransactionsByStep,
@@ -177,62 +193,57 @@ export function DashboardPage() {
     eventDate: '',
   })
   const [transactionError, setTransactionError] = useState('')
-  const [transferRequests, setTransferRequests] = useState<TransferRequest[]>([
+  const [incomingOrders, setIncomingOrders] = useState<IncomingOrder[]>([
     {
-      id: 'XFER-001',
+      id: 'ORD-001',
+      salesOrderNo: 'SO-2026-0001',
       batchId: 'COF-TRF-0001',
       buyerId: 'BUY-001',
       sellerId: 'SEL-001',
       quantity: '500',
       unit: 'kg',
-      requestDate: '2026-03-02',
-      status: 'PENDING',
+      orderDate: '2026-03-02',
+      status: 'NEW',
     },
     {
-      id: 'XFER-002',
+      id: 'ORD-002',
+      salesOrderNo: 'SO-2026-0002',
       batchId: 'COF-TRF-0002',
       buyerId: 'BUY-002',
       sellerId: 'SEL-001',
       quantity: '800',
       unit: 'kg',
-      requestDate: '2026-03-03',
-      status: 'APPROVED',
+      orderDate: '2026-03-03',
+      status: 'READY_TO_SHIP',
     },
     {
-      id: 'XFER-003',
+      id: 'ORD-003',
+      salesOrderNo: 'SO-2026-0003',
       batchId: 'COF-TRF-0003',
       buyerId: 'BUY-003',
       sellerId: 'SEL-002',
       quantity: '650',
       unit: 'kg',
-      requestDate: '2026-03-04',
-      status: 'REJECTED',
+      orderDate: '2026-03-04',
+      status: 'IN_TRANSIT',
     },
     {
-      id: 'XFER-004',
+      id: 'ORD-004',
+      salesOrderNo: 'SO-2026-0004',
       batchId: 'COF-TRF-0004',
       buyerId: 'BUY-004',
       sellerId: 'SEL-003',
       quantity: '900',
       unit: 'kg',
-      requestDate: '2026-03-05',
-      status: 'PARTIAL_APPROVED',
+      orderDate: '2026-03-05',
+      status: 'DELIVERED',
     },
   ])
-  const [transferForm, setTransferForm] = useState<Omit<TransferRequest, 'id'>>({
-    batchId: '',
-    buyerId: '',
-    sellerId: '',
-    quantity: '',
-    unit: 'kg',
-    requestDate: '',
-    status: 'PENDING',
-  })
-  const [transferError, setTransferError] = useState('')
   const [samplingRequests, setSamplingRequests] = useState<SamplingRequest[]>([
     {
       id: 'SMP-001',
-      originTransactionId: 'TRX-1-001',
+      sourceTransactionId: 'TRX-1-001',
+      sourceStepId: '1',
       batchId: 'COF-1001',
       requesterActorId: 'ACT-001',
       requestedDate: '2026-03-02',
@@ -258,8 +269,43 @@ export function DashboardPage() {
       note: 'Lineage, seal, dan attestation valid.',
     },
   ])
+  const [stockBatches, setStockBatches] = useState<StockBatch[]>([
+    {
+      id: 'STK-001',
+      batchId: 'COF-1001',
+      source: 'CREATION',
+      qtyKg: 1200,
+      ownerRole: 'farmer',
+      published: true,
+    },
+    {
+      id: 'STK-002',
+      batchId: 'COF-1002',
+      source: 'CREATION',
+      qtyKg: 840,
+      ownerRole: 'farmer',
+      published: false,
+    },
+    {
+      id: 'STK-003',
+      batchId: 'COF-DIS-2001',
+      source: 'PURCHASE',
+      qtyKg: 600,
+      ownerRole: 'distributor',
+      published: false,
+    },
+    {
+      id: 'STK-004',
+      batchId: 'COF-DIS-2002',
+      source: 'PURCHASE',
+      qtyKg: 950,
+      ownerRole: 'distributor',
+      published: true,
+    },
+  ])
 
-  const activeCard = flowCards.find((card) => card.id === activeActionId)
+  const filteredFlowCards = flowCards.filter((card) => visibleStepIds.includes(card.id))
+  const activeCard = filteredFlowCards.find((card) => card.id === activeActionId)
   const activeTransactions = stepTransactions[activeActionId] ?? []
   const verifiedCount = verificationResults.filter((item) => item.verdict === 'VERIFIED').length
   const flaggedCount = verificationResults.filter((item) => item.verdict === 'FLAGGED').length
@@ -267,13 +313,14 @@ export function DashboardPage() {
   const activeSamplingCount = samplingRequests.filter(
     (item) => item.status !== 'COMPLETED' && item.status !== 'REJECTED',
   ).length
+  const canAccessStock = role === 'farmer' || role === 'distributor'
+  const roleStockBatches = stockBatches.filter((batch) => batch.ownerRole === role)
 
   const handleActionClick = (actionId: string) => {
     if (actionId === '7') {
       setActiveActionId('overview')
       setTransactionPanelMode('list')
       setTransactionError('')
-      setTransferError('')
       document.getElementById('dashboard-verification-main')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       return
     }
@@ -281,7 +328,6 @@ export function DashboardPage() {
     setActiveActionId(actionId)
     setTransactionPanelMode('list')
     setTransactionError('')
-    setTransferError('')
     document.getElementById('dashboard-transaction-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -289,8 +335,14 @@ export function DashboardPage() {
     setActiveActionId('overview')
     setTransactionPanelMode('list')
     setTransactionError('')
-    setTransferError('')
     document.getElementById('dashboard-overview-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleStockClick = () => {
+    setActiveActionId('stock')
+    setTransactionPanelMode('list')
+    setTransactionError('')
+    document.getElementById('dashboard-stock-main')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const handleTransactionFieldChange = (field: keyof Omit<StepTransaction, 'id'>, value: string) => {
@@ -347,50 +399,17 @@ export function DashboardPage() {
     createAutoSeal(activeActionId, `Submit transaction on Step ${activeActionId}`)
   }
 
-  const handleTransferFieldChange = (field: keyof Omit<TransferRequest, 'id'>, value: string) => {
-    setTransferForm((prev) => ({ ...prev, [field]: value }))
+  const handleIncomingOrderStatusChange = (orderId: string, status: IncomingOrderStatus) => {
+    setIncomingOrders((prev) => prev.map((order) => (order.id === orderId ? { ...order, status } : order)))
+    createAutoSeal('3', `Update incoming order ${orderId} -> ${status}`)
   }
 
-  const handleAddTransferRequest = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    if (
-      !transferForm.batchId ||
-      !transferForm.buyerId ||
-      !transferForm.sellerId ||
-      !transferForm.quantity ||
-      !transferForm.requestDate
-    ) {
-      setTransferError('Semua field wajib diisi untuk menambah transfer request.')
-      return
-    }
-
-    setTransferRequests((prev) => [
-      {
-        id: `XFER-${String(prev.length + 1).padStart(3, '0')}`,
-        ...transferForm,
-      },
-      ...prev,
-    ])
-    setTransferForm({
-      batchId: '',
-      buyerId: '',
-      sellerId: '',
-      quantity: '',
-      unit: 'kg',
-      requestDate: '',
-      status: 'PENDING',
-    })
-    setTransferError('')
-    setTransactionPanelMode('list')
-    createAutoSeal('2', 'Submit transfer request')
-  }
-
-  const handleRequestSamplingFromOrigin = (transaction: StepTransaction) => {
+  const handleRequestSampling = (transaction: StepTransaction, sourceStepId: '1' | '4') => {
     setSamplingRequests((prev) => [
       {
         id: `SMP-${String(prev.length + 1).padStart(3, '0')}`,
-        originTransactionId: transaction.id,
+        sourceTransactionId: transaction.id,
+        sourceStepId,
         batchId: transaction.batchId,
         requesterActorId: transaction.actorId,
         requestedDate: new Date().toISOString().slice(0, 10),
@@ -398,7 +417,7 @@ export function DashboardPage() {
       },
       ...prev,
     ])
-    createAutoSeal('1', `Request sampling from ${transaction.id}`)
+    createAutoSeal(sourceStepId, `Request sampling from ${transaction.id}`)
   }
 
   const handleSamplingStatusChange = (samplingId: string, status: SamplingStatus) => {
@@ -437,11 +456,30 @@ export function DashboardPage() {
   const getSamplingStatusClassName = (status: SamplingStatus) =>
     `transaction-status transaction-status--${status.toLowerCase().replace(/_/g, '-')}`
 
+  const handleToggleStockPublish = (stockId: string) => {
+    setStockBatches((prev) =>
+      prev.map((batch) => (batch.id === stockId ? { ...batch, published: !batch.published } : batch)),
+    )
+  }
+
+  useEffect(() => {
+    if (activeActionId === 'stock') {
+      if (!canAccessStock) {
+        setActiveActionId('overview')
+      }
+      return
+    }
+
+    if (activeActionId !== 'overview' && !visibleStepIds.includes(activeActionId)) {
+      setActiveActionId('overview')
+    }
+  }, [activeActionId, canAccessStock, visibleStepIds])
+
   return (
     <section className="page page--wide">
       <div id="dashboard-overview-anchor" />
       <p className="eyebrow">Workspace</p>
-      <h1 className="title">Dashboard - Coffee Use Case v0.2</h1>
+      <h1 className="title">{title}</h1>
       <p className="description">
         Alur operasional tenant dari origin sampai verifikasi publik untuk menjaga
         traceability, anti-fraud, dan integrity checkpoint.
@@ -458,7 +496,7 @@ export function DashboardPage() {
             >
               Overview
             </button>
-            {flowCards.map((card) => {
+            {filteredFlowCards.map((card) => {
               const isActive = activeActionId === card.id
               return (
                 <button
@@ -467,10 +505,19 @@ export function DashboardPage() {
                   onClick={() => handleActionClick(card.id)}
                   type="button"
                 >
-                  Step {card.id} - {card.title}
+                  {card.title}
                 </button>
               )
             })}
+            {canAccessStock ? (
+              <button
+                className={`dashboard-action ${activeActionId === 'stock' ? 'dashboard-action--active' : ''}`}
+                onClick={handleStockClick}
+                type="button"
+              >
+                Stock
+              </button>
+            ) : null}
           </div>
         </aside>
 
@@ -516,7 +563,7 @@ export function DashboardPage() {
                             <p className="transaction-list-item__meta">Tanggal: {transaction.eventDate}</p>
                             <button
                               className="secondary-button"
-                              onClick={() => handleRequestSamplingFromOrigin(transaction)}
+                              onClick={() => handleRequestSampling(transaction, '1')}
                               type="button"
                             >
                               Request Sampling Test
@@ -585,135 +632,66 @@ export function DashboardPage() {
 
                 {activeActionId === '2' ? (
                   <>
-                    <h2 className="workflow-title">Transfer Request (Buyer -&gt; Seller)</h2>
+                    <h2 className="workflow-title">Transaction History & Progress</h2>
                     <p className="workflow-note">
-                      Step 2 berisi transaksi permintaan transfer dari pihak pembeli.
+                      Step 2 menampilkan history transaksi dan status progress order secara kronologis.
                     </p>
-                    <div className="transaction-toolbar">
-                      <button
-                        className={`transaction-toolbar__button ${transactionPanelMode === 'list' ? 'transaction-toolbar__button--active' : ''}`}
-                        onClick={() => setTransactionPanelMode('list')}
-                        type="button"
-                      >
-                        List
-                      </button>
-                      <button
-                        className={`transaction-toolbar__button ${transactionPanelMode === 'add' ? 'transaction-toolbar__button--active' : ''}`}
-                        onClick={() => setTransactionPanelMode('add')}
-                        type="button"
-                      >
-                        Add New
-                      </button>
+                    <div className="transaction-list">
+                      {incomingOrders.map((order) => (
+                        <div className="transaction-list-item" key={`${order.id}-history`}>
+                          <p className="transaction-list-item__id">{order.id}</p>
+                          <p className="transaction-list-item__meta">
+                            <strong>{order.salesOrderNo}</strong> - Batch <strong>{order.batchId}</strong>
+                          </p>
+                          <p className="transaction-list-item__meta">
+                            Buyer: {order.buyerId} | Seller: {order.sellerId} | Qty: {order.quantity} {order.unit}
+                          </p>
+                          <p className="transaction-list-item__meta">Order Date: {order.orderDate}</p>
+                          <p className="transaction-list-item__meta">
+                            Progress: <span className={getStatusClassName(order.status)}>{order.status}</span>
+                          </p>
+                        </div>
+                      ))}
                     </div>
-
-                    {transactionPanelMode === 'list' ? (
-                      <div className="transaction-list">
-                        {transferRequests.map((request) => (
-                          <div className="transaction-list-item" key={request.id}>
-                            <p className="transaction-list-item__id">{request.id}</p>
-                            <p className="transaction-list-item__meta">
-                              <strong>{request.batchId}</strong> - Buyer: {request.buyerId} - Seller: {request.sellerId}
-                            </p>
-                            <p className="transaction-list-item__meta">
-                              Qty: {request.quantity} {request.unit} | Request Date: {request.requestDate}
-                            </p>
-                            <p className="transaction-list-item__meta">
-                              <span className={getStatusClassName(request.status)}>{request.status}</span>
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <form className="transaction-form" onSubmit={handleAddTransferRequest}>
-                        <label className="field">
-                          <span>Batch ID</span>
-                          <input
-                            onChange={(event) => handleTransferFieldChange('batchId', event.target.value)}
-                            placeholder="COF-TRF-0005"
-                            value={transferForm.batchId}
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Buyer ID</span>
-                          <input
-                            onChange={(event) => handleTransferFieldChange('buyerId', event.target.value)}
-                            placeholder="BUY-005"
-                            value={transferForm.buyerId}
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Seller ID</span>
-                          <input
-                            onChange={(event) => handleTransferFieldChange('sellerId', event.target.value)}
-                            placeholder="SEL-002"
-                            value={transferForm.sellerId}
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Quantity</span>
-                          <input
-                            onChange={(event) => handleTransferFieldChange('quantity', event.target.value)}
-                            placeholder="700"
-                            value={transferForm.quantity}
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Unit</span>
-                          <input
-                            onChange={(event) => handleTransferFieldChange('unit', event.target.value)}
-                            placeholder="kg"
-                            value={transferForm.unit}
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Request Date</span>
-                          <input
-                            onChange={(event) => handleTransferFieldChange('requestDate', event.target.value)}
-                            type="date"
-                            value={transferForm.requestDate}
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Status</span>
-                          <select
-                            onChange={(event) => handleTransferFieldChange('status', event.target.value as TransferStatus)}
-                            value={transferForm.status}
-                          >
-                            {transferStatuses.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        {transferError ? <p className="transaction-form__error">{transferError}</p> : null}
-                        <button className="primary-button" type="submit">
-                          Add Transfer Request
-                        </button>
-                      </form>
-                    )}
                   </>
                 ) : null}
 
                 {activeActionId === '3' ? (
                   <>
-                    <h2 className="workflow-title">Transfer Confirmation (Seller Response)</h2>
+                    <h2 className="workflow-title">Incoming Orders (Need Shipment)</h2>
                     <p className="workflow-note">
-                      Step 3 menampilkan konfirmasi dari pihak penjual. Step ini tidak punya Add New.
+                      Incoming order dari marketplace diproses di sini sampai barang dikirim/diterima.
                     </p>
                     <div className="transaction-list">
-                      {transferRequests.map((request) => (
-                        <div className="transaction-list-item" key={`${request.id}-confirmation`}>
-                          <p className="transaction-list-item__id">{request.id}</p>
+                      {incomingOrders.map((order) => (
+                        <div className="transaction-list-item" key={order.id}>
+                          <p className="transaction-list-item__id">{order.id}</p>
                           <p className="transaction-list-item__meta">
-                            Batch <strong>{request.batchId}</strong> - Seller {request.sellerId} mengonfirmasi request dari{' '}
-                            {request.buyerId}
+                            <strong>{order.salesOrderNo}</strong> - Batch <strong>{order.batchId}</strong>
                           </p>
                           <p className="transaction-list-item__meta">
-                            Qty: {request.quantity} {request.unit} | Date: {request.requestDate}
+                            Buyer: {order.buyerId} | Seller: {order.sellerId} | Qty: {order.quantity} {order.unit}
                           </p>
                           <p className="transaction-list-item__meta">
-                            <span className={getStatusClassName(request.status)}>{request.status}</span>
+                            Order Date: {order.orderDate}
+                          </p>
+                          <label className="field">
+                            <span>Shipment Status</span>
+                            <select
+                              onChange={(event) =>
+                                handleIncomingOrderStatusChange(order.id, event.target.value as IncomingOrderStatus)
+                              }
+                              value={order.status}
+                            >
+                              {incomingOrderStatuses.map((status) => (
+                                <option key={status} value={status}>
+                                  {status}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <p className="transaction-list-item__meta">
+                            <span className={getStatusClassName(order.status)}>{order.status}</span>
                           </p>
                         </div>
                       ))}
@@ -732,7 +710,8 @@ export function DashboardPage() {
                         <div className="transaction-list-item" key={sampling.id}>
                           <p className="transaction-list-item__id">{sampling.id}</p>
                           <p className="transaction-list-item__meta">
-                            Origin Ref: <strong>{sampling.originTransactionId}</strong> | Batch: {sampling.batchId}
+                            Source: Step {sampling.sourceStepId} | Ref: <strong>{sampling.sourceTransactionId}</strong> | Batch:{' '}
+                            {sampling.batchId}
                           </p>
                           <p className="transaction-list-item__meta">
                             Requester: {sampling.requesterActorId} | Requested Date: {sampling.requestedDate}
@@ -823,6 +802,15 @@ export function DashboardPage() {
                               Actor: {transaction.actorId} | Qty: {transaction.quantity} {transaction.unit}
                             </p>
                             <p className="transaction-list-item__meta">Tanggal: {transaction.eventDate}</p>
+                            {activeActionId === '4' ? (
+                              <button
+                                className="secondary-button"
+                                onClick={() => handleRequestSampling(transaction, '4')}
+                                type="button"
+                              >
+                                Request Sampling Test
+                              </button>
+                            ) : null}
                           </div>
                         ))}
                       </div>
@@ -955,94 +943,44 @@ export function DashboardPage() {
                   </div>
                 </article>
               </section>
-
-              <div className="workflow-grid">
-                {flowCards.map((card) => {
-                  const isActive = activeActionId === card.id
-
-                  return (
-                    <article
-                      className={`workflow-card ${isActive ? 'workflow-card--active' : ''}`}
-                      id={`action-${card.id}`}
-                      key={card.id}
-                    >
-                      <p className="workflow-id">Step {card.id}</p>
-                      <h2 className="workflow-title">{card.title}</h2>
-                      <p className="workflow-note">{card.note}</p>
-
-                      {card.status ? <p className="workflow-chip">Status: {card.status}</p> : null}
-
-                      {card.fields ? (
-                        <>
-                          <p className="workflow-section-title">Field</p>
-                          <ul className="workflow-list">
-                            {card.fields.map((field) => (
-                              <li key={field}>{field}</li>
-                            ))}
-                          </ul>
-                        </>
-                      ) : null}
-
-                      {card.decisions ? (
-                        <>
-                          <p className="workflow-section-title">Decision</p>
-                          <ul className="workflow-list">
-                            {card.decisions.map((decision) => (
-                              <li key={decision}>{decision}</li>
-                            ))}
-                          </ul>
-                        </>
-                      ) : null}
-
-                      {card.events ? (
-                        <>
-                          <p className="workflow-section-title">Event Tercatat</p>
-                          <ul className="workflow-list">
-                            {card.events.map((event) => (
-                              <li key={event}>{event}</li>
-                            ))}
-                          </ul>
-                        </>
-                      ) : null}
-
-                      {card.outputs ? (
-                        <>
-                          <p className="workflow-section-title">Output</p>
-                          <ul className="workflow-list">
-                            {card.outputs.map((output) => (
-                              <li key={output}>{output}</li>
-                            ))}
-                          </ul>
-                        </>
-                      ) : null}
-
-                      {card.id === '1' ? (
-                        <div className="workflow-help">
-                          <p className="workflow-section-title">Help / Overview</p>
-                          <p className="workflow-note">
-                            Gunakan Step 1 untuk registrasi batch awal sebelum masuk lifecycle transfer.
-                          </p>
-                          <p className="workflow-section-title">Event Model (ringkas)</p>
-                          <ul className="workflow-list">
-                            {eventModel.map((eventType) => (
-                              <li key={eventType}>
-                                <code>{eventType}</code>
-                              </li>
-                            ))}
-                          </ul>
-                          <p className="workflow-section-title">Role Layer (ringkas)</p>
-                          <ul className="workflow-list">
-                            {roleLayer.map((role) => (
-                              <li key={role}>{role}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : null}
-                    </article>
-                  )
-                })}
-              </div>
             </>
+          ) : null}
+
+          {activeActionId === 'stock' && canAccessStock ? (
+            <section className="transaction-panel" id="dashboard-stock-main">
+              <article className="workflow-card">
+                <h2 className="workflow-title">Stock Batches</h2>
+                <p className="workflow-note">
+                  Batch produk masuk dari creation/purchase. Tentukan publish ke marketplace per batch.
+                </p>
+                <div className="dashboard-stock-list">
+                  {roleStockBatches.map((batch) => (
+                    <article className="dashboard-stock-item" key={batch.id}>
+                      <p className="dashboard-stock-item__id">{batch.id}</p>
+                      <p className="dashboard-stock-item__meta">
+                        Batch: <strong>{batch.batchId}</strong>
+                      </p>
+                      <p className="dashboard-stock-item__meta">
+                        Source: {batch.source === 'CREATION' ? 'Creation' : 'Purchase'} | Qty: {batch.qtyKg} kg
+                      </p>
+                      <p className="dashboard-stock-item__meta">
+                        Marketplace:{' '}
+                        <span className={getStatusClassName(batch.published ? 'APPROVED' : 'PENDING')}>
+                          {batch.published ? 'PUBLISHED' : 'NOT_PUBLISHED'}
+                        </span>
+                      </p>
+                      <button
+                        className="secondary-button"
+                        onClick={() => handleToggleStockPublish(batch.id)}
+                        type="button"
+                      >
+                        {batch.published ? 'Unpublish from Marketplace' : 'Publish to Marketplace'}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </article>
+            </section>
           ) : null}
         </div>
       </div>

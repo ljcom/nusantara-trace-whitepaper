@@ -9,7 +9,7 @@ Status: Draft
 The profile uses these core domain entities:
 - `PlatformIdentity`: account-level platform identity for participating actors.
 - `CryptoIdentity`: signing identity (public key) used for non-repudiation.
-- `LegalIdentity` (optional): validated legal-entity reference.
+- `LegalIdentity`: validated legal-entity reference.
 - `Batch`: traceable lot-level unit as the primary custody identity.
 - `Shipment`: transfer container/reference used for inter-actor handover.
 - `Transfer`: pending or settled custody handover record.
