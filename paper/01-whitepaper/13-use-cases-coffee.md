@@ -1,6 +1,6 @@
 # 13-use-cases-coffee.md
 Nusantara Trace - Coffee Use Cases
-Version: 0.2
+Version: 0.3
 Status: Draft
 
 
@@ -64,28 +64,30 @@ Output:
 - chain event is recorded
 - public QR / ID is generated
 
-### 2.2 Transfer Request (Pending)
+### 2.2 Transaction History and Progress (Marketplace-Sourced Orders)
 
-Sender initializes transfer with:
-- from actor
-- to actor
+Marketplace transactions are treated as the source of sales order and transfer intent.  
+In dashboard operation, Step 2 is used as a read-oriented order history and progress panel, including:
+- sales order number
+- buyer and seller identities
 - batch reference
 - quantity
-- timestamp
+- order date
+- current order progress status
 
-Status is `PENDING` until the receiver records terminal confirmation.
+Step 2 is not used for manual transfer-request input in this workflow variant.
 
-### 2.3 Transfer Confirmation
+### 2.3 Incoming Order and Shipment Confirmation
 
-Receiver decides:
-- `APPROVE` when quantity and reference are consistent
-- `REJECT` when quantity/reference mismatch exists
+Seller-side operation tracks incoming marketplace orders and updates shipment progression:
+- `NEW`
+- `CONFIRMED`
+- `READY_TO_SHIP`
+- `IN_TRANSIT`
+- `DELIVERED`
+- `CANCELLED`
 
-Evidence is recorded on both sides:
-- outflow (sender side)
-- inflow (receiver side)
-
-Dual-sided recording is required for anti-fraud reconciliation.
+This model keeps shipment progress explicit and auditable while preserving transfer accountability.
 
 ### 2.4 Split / Repack
 
@@ -95,6 +97,8 @@ Batch operations may include:
 - repack
 
 Parent-child lineage MUST be preserved so provenance reconstruction remains deterministic.
+
+In the current dashboard implementation, Split/Repack can also generate sampling requests for lab validation, similar to origin creation sampling triggers.
 
 ### 2.5 Attestation
 
@@ -107,15 +111,15 @@ Audit output is represented as:
 - attestation event
 - signed by auditor
 
-### 2.6 Seal / Snapshot
+### 2.6 Seal / Snapshot (System-Driven)
 
 For each policy window, system SHOULD record:
 - hash commitment
 - optional blockchain anchor
 
-This layer provides periodic integrity checkpoints without changing domain custody semantics.
+In the current operational UX, this step is system-driven and triggered automatically after significant submissions/status transitions, rather than requiring manual operator action.
 
-### 2.7 Public Verification
+### 2.7 Public Verification (Main Dashboard Surface)
 
 Selected batches SHOULD expose public verification pointers (for example QR/public trace ID) so external buyers or auditors can validate:
 - custody chain activity status
@@ -123,6 +127,8 @@ Selected batches SHOULD expose public verification pointers (for example QR/publ
 - available attestation references
 
 Public verification is read-oriented evidence access. It does not expose private operational payloads beyond declared policy scope.
+
+In the current UI direction, public verification is positioned as the main overview surface with summary scorecards and trace-check outcomes.
 
 ## 3. Technical Architecture Overview
 
@@ -185,6 +191,18 @@ Each participant is represented by a system identity and organization role. Role
 
 This identity-role model supports accountability without forcing all actors to use advanced key-management at day one. Platform-managed onboarding can be used in early phases while preserving signed event responsibility.
 
+Operational dashboard scope in current MVP mockup is role-filtered:
+- Farmer dashboard: overview, origin creation, incoming order/shipment, split/repack, stock, profile
+- Distributor dashboard: overview, transaction history/progress, incoming order/shipment, split/repack, stock, profile
+- Lab tester dashboard: overview, attestation queue, profile
+- Customer dashboard: overview, transaction history/progress, profile
+
+Profile surfaces include staged verification status:
+- `DRAFT`
+- `PENDING_VERIFICATION`
+- `VERIFIED_LIMITED`
+- `VERIFIED_FULL`
+
 ## 7. Seal, Snapshot, and Integrity Mechanism
 
 Integrity is enforced through periodic or milestone-based checkpointing:
@@ -231,6 +249,10 @@ Boundary clarification:
 - Nusantara Trace can supply trusted trace records to B2B listing/sourcing workflows.
 - Nusantara Trace is not defined here as a full marketplace matching engine.
 - Pricing negotiation, order matching, payment settlement, and trade finance remain external modules/platforms.
+
+Current mockup reflects this boundary by:
+- placing product discovery/cart/delivery/payment in marketplace-facing modules
+- reusing marketplace order outputs as trace-facing transaction history and incoming-order processing context
 
 This boundary keeps the paper consistent with previous direction: marketplace utility is enabled through verified trace data, without turning the architecture into a trading system.
 
@@ -314,6 +336,7 @@ ERC-1155 is intentionally excluded because this use case does not require tokeni
 - Uses blockchain only as optional public anchoring layer.
 - Preserves B2B marketplace-facing sourcing compatibility without making marketplace settlement a core protocol function.
 - Maintains clear boundary: integrity evidence vs domain/business interpretation.
+- Supports role-specific operational dashboard slicing and profile verification workflows.
 
 ## E. Assumptions and Areas Requiring Confirmation
 

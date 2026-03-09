@@ -60,6 +60,29 @@ Onboarding SHOULD follow a staged process to reduce operational risk.
 - Document readiness checklist completion.
 - Approve monitoring responsibilities and escalation contacts.
 
+## 2A. Account Verification Staging (Role-Aware)
+
+To reduce fraud onboarding risk, pilot participants SHOULD apply staged account verification:
+
+1. Minimum join gate (signup stage)
+- email/phone ownership check (for example OTP)
+- accountable PIC registration
+- role declaration (farmer, distributor, lab tester, customer)
+- explicit policy and consent acceptance
+
+2. Profile verification stage
+- role-specific document set collection and review
+- identity-proof and liveness confirmation where required by policy
+- escalation path for incomplete or inconsistent submissions
+
+3. Verification status policy
+- `DRAFT`
+- `PENDING_VERIFICATION`
+- `VERIFIED_LIMITED`
+- `VERIFIED_FULL`
+
+Operational permissions SHOULD map to status level, especially for high-impact actions (for example marketplace publication, attestation issuance, and high-risk split/repack operations).
+
 ## 3. Minimal Deployment Architecture
 
 The pilot SHOULD use the smallest architecture that preserves federated accountability.
@@ -108,7 +131,7 @@ Verification recommendation:
 ## 6. Operational Runbook (Pilot Minimum)
 
 Pilot operators SHOULD maintain a concise runbook covering:
-- transfer pending queue review (at least twice daily)
+- incoming order and shipment-progress queue review (at least twice daily)
 - discrepancy triage and correction-event SLA
 - key incident escalation path
 - seal/snapshot monitoring checks
@@ -118,6 +141,11 @@ Suggested practical SLA targets:
 - pending transfer aged > 24 hours: mandatory review
 - discrepancy event issuance: within 1 business day of detection
 - evidence export delivery for audit request: within 2 business days
+
+Additional role-oriented checks:
+- incoming marketplace order queue review by seller/distributor dashboard at least twice daily
+- lab sampling queue review and status refresh at least once daily on working days
+- stock publication review (publish/unpublish controls) by farmer/distributor owner at least once daily
 
 ## 7. Success Metrics
 
