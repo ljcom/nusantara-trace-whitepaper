@@ -4,7 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WHITEPAPER_DIR="$ROOT_DIR/01-whitepaper"
 OUT_DIR="$ROOT_DIR/04-build/out"
-OUT_FILE="$OUT_DIR/nusantara-trace-whitepaper.pdf"
+OUT_PDF_FILE="$OUT_DIR/nusantara-trace-whitepaper.pdf"
+OUT_DOCX_FILE="$OUT_DIR/nusantara-trace-whitepaper.docx"
 TMP_MD="$OUT_DIR/.whitepaper_combined.md"
 TITLE="Nusantara Trace: Institution-Aware Traceability Profile over EventDB Core"
 MERMAID_FILTER="$ROOT_DIR/04-build/mermaid.lua"
@@ -20,15 +21,6 @@ if ! command -v pandoc >/dev/null 2>&1; then
 fi
 
 PDF_ENGINE="/Library/TeX/texbin/xelatex"
-
-if [[ ! -x "$PDF_ENGINE" ]]; then
-  cat >&2 <<'MSG'
-ERROR: required XeLaTeX engine not found at:
-  /Library/TeX/texbin/xelatex
-Install MacTeX and ensure this path is available.
-MSG
-  exit 1
-fi
 
 mkdir -p "$OUT_DIR"
 
@@ -80,26 +72,48 @@ if rg -n '^```mermaid' "$TMP_MD" >/dev/null 2>&1; then
 fi
 
 BIB_FILE="$WHITEPAPER_DIR/references.bib"
-PANDOC_ARGS=(
+PANDOC_COMMON_ARGS=(
   "$TMP_MD"
   --from gfm
   --standalone
+  --resource-path "$OUT_DIR:$WHITEPAPER_DIR:$ROOT_DIR"
   --metadata "title=$TITLE"
   --toc
   --toc-depth=2
   --number-sections
-  --pdf-engine="$PDF_ENGINE"
   --lua-filter "$MERMAID_FILTER"
-  -V geometry:margin=1in
-  -V colorlinks=true
-  -V linkcolor=blue
-  -o "$OUT_FILE"
 )
 
 if [[ -f "$BIB_FILE" ]]; then
-  PANDOC_ARGS+=(--citeproc --bibliography "$BIB_FILE")
+  PANDOC_COMMON_ARGS+=(--citeproc --bibliography "$BIB_FILE")
 fi
 
-pandoc "${PANDOC_ARGS[@]}"
+PANDOC_DOCX_ARGS=(
+  "${PANDOC_COMMON_ARGS[@]}"
+  -o "$OUT_DOCX_FILE"
+)
 
-echo "PDF generated: $OUT_FILE"
+pandoc "${PANDOC_DOCX_ARGS[@]}"
+
+if [[ ! -x "$PDF_ENGINE" ]]; then
+  cat >&2 <<'MSG'
+ERROR: required XeLaTeX engine not found at:
+  /Library/TeX/texbin/xelatex
+Install MacTeX and ensure this path is available.
+MSG
+  exit 1
+fi
+
+PANDOC_PDF_ARGS=(
+  "${PANDOC_COMMON_ARGS[@]}"
+  --pdf-engine="$PDF_ENGINE"
+  -V geometry:margin=1in
+  -V colorlinks=true
+  -V linkcolor=blue
+  -o "$OUT_PDF_FILE"
+)
+
+pandoc "${PANDOC_PDF_ARGS[@]}"
+
+echo "Word generated: $OUT_DOCX_FILE"
+echo "PDF generated: $OUT_PDF_FILE"

@@ -64,6 +64,11 @@ Output:
 - chain event is recorded
 - public QR / ID is generated
 
+Illustrative dashboard screenshots:
+
+![Origin creation form](origin-cretion-form.png)
+![Origin creation list](origin-creation-list.png)
+
 ### 2.2 Transaction History and Progress (Marketplace-Sourced Orders)
 
 Marketplace transactions are treated as the source of sales order and transfer intent.  
@@ -77,6 +82,10 @@ In dashboard operation, Step 2 is used as a read-oriented order history and prog
 
 Step 2 is not used for manual transfer-request input in this workflow variant.
 
+Illustrative dashboard screenshot:
+
+![Transaction history](trx-history.png)
+
 ### 2.3 Incoming Order and Shipment Confirmation
 
 Seller-side operation tracks incoming marketplace orders and updates shipment progression:
@@ -89,6 +98,10 @@ Seller-side operation tracks incoming marketplace orders and updates shipment pr
 
 This model keeps shipment progress explicit and auditable while preserving transfer accountability.
 
+Illustrative dashboard screenshot:
+
+![Incoming order and shipment progression](shipment.png)
+
 ### 2.4 Split / Repack
 
 Batch operations may include:
@@ -100,6 +113,11 @@ Parent-child lineage MUST be preserved so provenance reconstruction remains dete
 
 In the current dashboard implementation, Split/Repack can also generate sampling requests for lab validation, similar to origin creation sampling triggers.
 
+Illustrative dashboard screenshots:
+
+![Split and repack workflow](split-repack.png)
+![Batch stock view](stock-batch.png)
+
 ### 2.5 Attestation
 
 Optional third-party audit statements may include:
@@ -110,6 +128,10 @@ Optional third-party audit statements may include:
 Audit output is represented as:
 - attestation event
 - signed by auditor
+
+Illustrative dashboard screenshot:
+
+![Lab tester attestation queue](lab-tester.png)
 
 ### 2.6 Seal / Snapshot (System-Driven)
 
@@ -129,6 +151,10 @@ Selected batches SHOULD expose public verification pointers (for example QR/publ
 Public verification is read-oriented evidence access. It does not expose private operational payloads beyond declared policy scope.
 
 In the current UI direction, public verification is positioned as the main overview surface with summary scorecards and trace-check outcomes.
+
+Illustrative dashboard screenshot:
+
+![Public verification dashboard](verify-trace.png)
 
 ## 3. Technical Architecture Overview
 
@@ -197,6 +223,13 @@ Operational dashboard scope in current MVP mockup is role-filtered:
 - Lab tester dashboard: overview, attestation queue, profile
 - Customer dashboard: overview, transaction history/progress, profile
 
+Illustrative dashboard screenshots:
+
+![Sign in page](sign-in.png)
+![Profile verification status 1](profile-verify1.png)
+![Profile verification status 2](profile-verify2.png)
+![Profile verification status 3](profile-verify3.png)
+
 Profile surfaces include staged verification status:
 - `DRAFT`
 - `PENDING_VERIFICATION`
@@ -253,6 +286,13 @@ Boundary clarification:
 Current mockup reflects this boundary by:
 - placing product discovery/cart/delivery/payment in marketplace-facing modules
 - reusing marketplace order outputs as trace-facing transaction history and incoming-order processing context
+
+Illustrative marketplace screenshots:
+
+![B2B marketplace listing](b2b-marketplace.png)
+![B2B marketplace cart](b2b-mp-cart.png)
+![B2B marketplace delivery address](b2b-mp=delivery-address.png)
+![B2B marketplace payment](b2b-mp-payment.png)
 
 This boundary keeps the paper consistent with previous direction: marketplace utility is enabled through verified trace data, without turning the architecture into a trading system.
 
