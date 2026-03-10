@@ -161,13 +161,25 @@ const roleVerificationRequirements: Record<DashboardRole, string[]> = {
   customer: ['Company Registration Document', 'Procurement PIC Authorization'],
 }
 
+function randomDateIn2026(): string {
+  const start = new Date('2026-01-01').getTime()
+  const end = new Date('2026-12-31').getTime()
+  const timestamp = Math.floor(Math.random() * (end - start + 1)) + start
+  return new Date(timestamp).toISOString().slice(0, 10)
+}
+
 const initialTransactionsByStep = flowCards.reduce((accumulator, card) => {
+  const summary =
+    card.title === 'Split / Repack'
+      ? `Coffee Arabica repack on ${randomDateIn2026()}`
+      : `Coffee Gayo batch ${randomDateIn2026()}`
+
   accumulator[card.id] = [
     {
       id: `TRX-${card.id}-001`,
       batchId: `COF-${card.id}001`,
       actorId: 'ACT-001',
-      summary: `Sample transaction untuk ${card.title}`,
+      summary,
       quantity: '1000',
       unit: 'kg',
       eventDate: '2026-03-01',

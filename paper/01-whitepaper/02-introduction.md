@@ -8,6 +8,12 @@ Supply chain actors require records that can be audited across organizational bo
 
 Nusantara Trace addresses this by defining a domain profile that runs on EventDB Core.
 
+## Public References
+
+Project references used in this paper:
+- Source repository: <https://github.com/ljcom/nusantara-trace-whitepaper> [@nusantara_trace_whitepaper_repo_2026]
+- Public endpoint: <https://nusantara.mx4.link> [@nusantara_mx4_link_2026]
+
 ## Positioning
 
 Nusantara Trace is not a general marketplace, not an ERP replacement, and not a commodity tokenization venue.
